@@ -1,0 +1,104 @@
+name: authyo_plugin
+description:
+  "# Authyo Flutter Plugin
+
+   The Authyo Flutter plugin provides a hassle-free, production-ready solution for integrating secure, multi-channel MFA (Multi-Factor Authentication) into your apps using [Authyo](https://authyo.io). Whether you're working with legacy systems or building a modern, passwordless app — this plugin helps you get started in minutes.
+
+   ## ✨ Features
+
+   - ✅ Multi-channel support: WhatsApp, SMS, Email, Call  
+   - 🔄 Plug-and-play OTP UI or headless API integration  
+   - 🏗️ Works seamlessly with legacy and modern systems  
+   - 🔐 JWT support for passwordless login flows  
+   - 🧰 Full REST API support for advanced implementations  
+   - 🧠 Configure OTP channel priority directly from dashboard  
+   - 📊 Transparent usage & billing from your dashboard  
+   - 🆓 Free trial credits for every new developer  
+   - 💸 Affiliate-ready for monetization
+
+   ## 🛠️ Getting Started
+
+   1. Register on [authyo.io](https://authyo.io)
+   2. Create your app and obtain your API key from the dashboard
+   3. Install the Flutter plugin and integrate using just a few lines of code
+   4. Configure your preferred OTP channels without any code changes
+
+   ## 💡 Save Development Time
+
+   Authyo eliminates the need to build complex OTP systems from scratch. It’s a plug-and-play solution that can save countless hours of development and testing — giving developers more time to focus on core features.
+
+   ## 🔧 No backend or server logic needed — all heavy lifting is handled by Authyo."
+version: 1.0.0
+homepage: https://authyo.io
+repository: https://github.com/techsmsidea/authyo-flutter-sdk.git
+documentation: https://authyo.io/docs
+
+# BSD 3-Clause license
+license: BSD-3-Clause
+
+environment:
+  sdk: ^3.8.1
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.2
+  dio: ^5.8.0+1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  # This section identifies this Flutter project as a plugin project.
+  # The 'pluginClass' specifies the class (in Java, Kotlin, Swift, Objective-C, etc.)
+  # which should be registered in the plugin registry. This is required for
+  # using method channels.
+  # The Android 'package' specifies package in which the registered class is.
+  # This is required for using method channels on Android.
+  # The 'ffiPlugin' specifies that native code should be built and bundled.
+  # This is required for using `dart:ffi`.
+  # All these are used by the tooling to maintain consistency when
+  # adding or updating assets for this project.
+  plugin:
+    platforms:
+      android:
+        package: com.plugin.authyo.authyo_plugin
+        pluginClass: AuthyoPlugin
+      ios:
+        pluginClass: AuthyoPlugin
+
+  # To add assets to your plugin package, add an assets section, like this:
+  assets:
+    - res/
+  #
+  # For details regarding assets in packages, see
+  # https://flutter.dev/to/asset-from-package
+  #
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # To add custom fonts to your plugin package, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts in packages, see
+  # https://flutter.dev/to/font-from-package
