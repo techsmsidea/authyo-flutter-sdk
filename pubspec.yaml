@@ -1,33 +1,21 @@
 name: authyo_plugin
 description:
-  "# Authyo Flutter Plugin
+  "The Authyo Flutter plugin offers a simple, production-ready way to add secure, multi-channel MFA to your app using Authyo. Start in minutes—ideal for legacy or passwordless systems.
 
-   The Authyo Flutter plugin provides a hassle-free, production-ready solution for integrating secure, multi-channel MFA (Multi-Factor Authentication) into your apps using [Authyo](https://authyo.io). Whether you're working with legacy systems or building a modern, passwordless app — this plugin helps you get started in minutes.
+   ✨ Feature
+   ✅ WhatsApp, SMS, Email, Call
+   🔄 Plug-and-play UI or headless API
+   🏗️ Legacy & modern system support
+   🔐 JWT for passwordless login
+   🧰 Full REST API support
+   🧠 OTP priority via dashboard
+   🆓 Free trial credits
 
-   ## ✨ Features
-
-   - ✅ Multi-channel support: WhatsApp, SMS, Email, Call  
-   - 🔄 Plug-and-play OTP UI or headless API integration  
-   - 🏗️ Works seamlessly with legacy and modern systems  
-   - 🔐 JWT support for passwordless login flows  
-   - 🧰 Full REST API support for advanced implementations  
-   - 🧠 Configure OTP channel priority directly from dashboard  
-   - 📊 Transparent usage & billing from your dashboard  
-   - 🆓 Free trial credits for every new developer  
-   - 💸 Affiliate-ready for monetization
-
-   ## 🛠️ Getting Started
-
-   1. Register on [authyo.io](https://authyo.io)
-   2. Create your app and obtain your API key from the dashboard
-   3. Install the Flutter plugin and integrate using just a few lines of code
-   4. Configure your preferred OTP channels without any code changes
-
-   ## 💡 Save Development Time
-
-   Authyo eliminates the need to build complex OTP systems from scratch. It’s a plug-and-play solution that can save countless hours of development and testing — giving developers more time to focus on core features.
-
-   ## 🔧 No backend or server logic needed — all heavy lifting is handled by Authyo."
+   🛠️ Getting Started
+   1. Register at authyo.io
+   2.Get API key
+   3.Install plugin
+   4.Configure channels easily"
 version: 1.0.0
 homepage: https://authyo.io
 repository: https://github.com/techsmsidea/authyo-flutter-sdk.git
