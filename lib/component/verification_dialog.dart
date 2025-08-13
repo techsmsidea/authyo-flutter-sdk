@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class PhoneVerificationDialog extends StatefulWidget {
-  PhoneVerificationDialog({super.key, required this.authyoRes, required this.to, this.onVerificationComplete});
+  const PhoneVerificationDialog({super.key, required this.authyoRes, required this.to, this.onVerificationComplete});
 
-  AuthyoResult authyoRes;
-  String to;
+  final AuthyoResult authyoRes;
+  final String to;
   final void Function(AuthyoResult authyoResult)? onVerificationComplete;
 
   @override
@@ -17,6 +17,7 @@ class PhoneVerificationDialog extends StatefulWidget {
 }
 
 class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
+
   final AuthyoService _authyoService = AuthyoService.instance;
   final TextEditingController _phoneNumberController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -265,9 +266,9 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                                                           color: Colors.white,
                                                           boxShadow: [
                                                             BoxShadow(
-                                                                color: Colors.black.withOpacity(0.15),
-                                                              spreadRadius: 2,
-                                                              blurRadius: 4
+                                                                color: const Color.fromRGBO(0, 0, 0, 0.15),
+                                                                spreadRadius: 2,
+                                                                blurRadius: 4
                                                             )
                                                           ]
                                                         ),

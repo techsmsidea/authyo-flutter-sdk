@@ -22,25 +22,36 @@ part 'handlers/errors.dart';
 
 part 'models/authyo_result.dart';
 
+/// Enum representing the available OTP delivery channels in Authyo.
 enum AuthwayEnum {
+  /// Send OTP via WhatsApp
   Whatsapp('WHATSAPP'),
+  /// Send OTP via Email
   Email('Email'),
+  /// Send OTP via SMS
   SMS('SMS'),
+  /// Send OTP via Voice Call
   VoiceCall('VoiceCall');
 
+  /// The string identifier for each auth way (used internally).
   final String authWay;
 
   const AuthwayEnum(this.authWay);
 }
 
+/// Singleton service to interact with Authyo APIs for sending and verifying OTPs.
 class AuthyoService {
+  /// The single instance of [AuthyoService].
   static final AuthyoService instance = AuthyoService._internal();
   _ApiService? _apiService;
   bool _showDefaultDialog = true;
 
   AuthyoService._internal();
 
-  /// Initializes the plugin with your [clientId] and [clientSecret] and optional [connectTimeout], [sendTimeout] and [receiveTimeout].
+  /// Initializes the plugin with your [clientId] and [clientSecret].
+  ///
+  /// You can optionally set [connectTimeout], [receiveTimeout], and whether to
+  /// use the built-in verification dialog with [showVerificationDialog].
   /// Call this method before making any [sendOtp] or [verifyOtp] requests.
   void init({required String clientId, required String clientSecret, Duration? connectTimeout, Duration? receiveTimeout, bool? showVerificationDialog}) {
     _apiService = _ApiService(
@@ -188,11 +199,13 @@ class AuthyoService {
     return AuthyoResult.failure(InternalServerError("${response?.error ?? "Something went wrong while processing your request"} "));
   }
 
+  /// Validates whether the given phone number is in international format.
   bool _isValidPhoneNumber(String phoneNumber) {
     final RegExp regex = RegExp(r'^\+[1-9]\d{9,15}$');
     return regex.hasMatch(phoneNumber);
   }
 
+  /// Validates if the given string is a valid email address.
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
     return emailRegex.hasMatch(email);
