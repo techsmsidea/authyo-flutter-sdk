@@ -1,21 +1,5 @@
 name: authyo_plugin
-description:
-  "The Authyo Flutter plugin offers a simple, production-ready way to add secure, multi-channel MFA to your app using Authyo. Start in minutes—ideal for legacy or passwordless systems.
-
-   ✨ Feature
-   ✅ WhatsApp, SMS, Email, Call
-   🔄 Plug-and-play UI or headless API
-   🏗️ Legacy & modern system support
-   🔐 JWT for passwordless login
-   🧰 Full REST API support
-   🧠 OTP priority via dashboard
-   🆓 Free trial credits
-
-   🛠️ Getting Started
-   1. Register at authyo.io
-   2.Get API key
-   3.Install plugin
-   4.Configure channels easily"
+description: "The Authyo Flutter plugin offers a simple, production-ready way to add secure, multi-channel MFA to your app using Authyo. Ideal for legacy or passwordless systems with support for SMS, WhatsApp, Email, and Voice Call."
 version: 1.0.0
 homepage: https://authyo.io
 repository: https://github.com/techsmsidea/authyo-flutter-sdk.git
