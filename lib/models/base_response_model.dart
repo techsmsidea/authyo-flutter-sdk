@@ -1,3 +1,6 @@
+/// Represents the base response model returned from Authyo API calls.
+///
+/// Includes success status, message, error information, and nested data.
 class AuthyoResponseModel {
   bool? success;
   String? message;
@@ -8,6 +11,7 @@ class AuthyoResponseModel {
 
   AuthyoResponseModel({this.success, this.message, this.data, this.status, this.error, this.errorCode});
 
+  /// Creates a AuthyoResponseModel model from json.
   AuthyoResponseModel.fromJson(Map<String, dynamic> json) {
     success = json['success'];
     message = json['message'];
@@ -19,12 +23,13 @@ class AuthyoResponseModel {
     }
   }
 
+  /// Creates a response model from an error response.
   AuthyoResponseModel.withError(Map<String, dynamic> json) {
     success = false;
     error = json['error'].toString();
     errorCode = json['errorCode'].toString();
   }
-
+  /// Creates a json model from AuthyoResponseModel.
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['success'] = success;
@@ -36,6 +41,8 @@ class AuthyoResponseModel {
   }
 }
 
+/// Contains detailed data from a successful Authyo response,
+/// including OTP results, token info, and user details.
 class Data {
   int? isTried;
   int? isSent;
@@ -84,6 +91,7 @@ class Data {
   }
 }
 
+/// Represents the user object returned in the response.
 class User {
   String? phone;
   String? userId;
@@ -95,6 +103,7 @@ class User {
   Map<String, dynamic> toJson() => {"phone": phone, "userId": userId};
 }
 
+/// Represents an individual OTP result including delivery status and metadata.
 class Results {
   bool? success;
   String? message;

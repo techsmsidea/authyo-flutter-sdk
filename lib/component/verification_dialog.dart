@@ -5,6 +5,11 @@ import 'package:authyo_plugin/colors/app_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// A dialog widget for verifying a phone number or email address using OTP.
+///
+/// This widget displays an OTP input field, handles OTP verification,
+/// allows OTP resend via different methods (SMS, WhatsApp, etc.), and
+/// notifies the parent on successful verification.
 class PhoneVerificationDialog extends StatefulWidget {
   const PhoneVerificationDialog({super.key, required this.authyoRes, required this.to, this.onVerificationComplete});
 
@@ -128,6 +133,7 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
               width: MediaQuery.of(context).size.width * 0.8,
               child: TextButton(
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
                   if (_formKey.currentState!.validate()) {
                     _isLoading.value = true;
 
@@ -135,18 +141,20 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
 
                     if (otpResult.error != null) {
                       _isLoading.value = false;
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
+                      messenger.showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
                     } else {
                       _isLoading.value = false;
 
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         SnackBar(
                           content: Text('${otpResult.result?.message}'),
                         ),
                       );
 
-                      Navigator.pop(context);
-                      FocusScope.of(context).unfocus();
+                      if(context.mounted){
+                        Navigator.pop(context);
+                        FocusScope.of(context).unfocus();
+                      }
                     }
 
                     widget.onVerificationComplete!(otpResult);
@@ -220,7 +228,7 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                             ? TextButton(
                                 onPressed: () async {
                                   if (widget.to.contains('@')) {
-                                    _authway = AuthwayEnum.Email;
+                                    _authway = AuthwayEnum.email;
                                     _resetTimer();
                                     _showOptions = false;
 
@@ -247,7 +255,7 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: !widget.to.contains('@')
                                           ? AuthwayEnum.values.map((e) {
-                                              return e.authWay == AuthwayEnum.Email.authWay
+                                              return e.authWay == AuthwayEnum.email.authWay
                                                   ? SizedBox()
                                                   : InkWell(
                                                       onTap: () async {
@@ -303,16 +311,17 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
 
   Future<AuthyoResult> _resendOTP() async {
     _isLoading.value = true;
+    final messenger = ScaffoldMessenger.of(context);
     AuthyoResult otpResult = await _authyoService.sendOtp(ctx: context, to: widget.to, resendOTP: true, authWay: _authway);
 
     if (otpResult.error != null) {
       _isLoading.value = false;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
+      messenger.showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
     } else {
       _isLoading.value = false;
       if (otpResult.result?.data?.results != null) {
         if (otpResult.result!.data!.results!.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${otpResult.result?.message}')));
+          messenger.showSnackBar(SnackBar(content: Text('Error: ${otpResult.result?.message}')));
         }
         final maskResult = otpResult.result?.data?.results?.firstWhere(
           (element) => element.maskId != null,
@@ -323,16 +332,16 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
 
 
         if (maskResult == null || maskResult.maskId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error in sending OTP. Please check entered details.')));
+          messenger.showSnackBar(SnackBar(content: Text('Error in sending OTP. Please check entered details.')));
         } else {
           String? maskId = otpResult.result?.data?.results?.firstWhere((element) => element.maskId != null).maskId;
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('OTP Sent Successfully')));
+          messenger.showSnackBar(SnackBar(content: Text('OTP Sent Successfully')));
           _phoneNumberController.text = '';
           currentMaskId = maskId ?? '';
 
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error in sending OTP. Please check entered details.')));
+        messenger.showSnackBar(SnackBar(content: Text('Error in sending OTP. Please check entered details.')));
       }
     }
     return otpResult;

@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:authyo_plugin/authyo_plugin.dart';
 import 'package:authyo_plugin/authyo_plugin_platform_interface.dart';
 import 'package:authyo_plugin/authyo_plugin_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';

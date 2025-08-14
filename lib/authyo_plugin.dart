@@ -10,7 +10,6 @@ import 'package:authyo_plugin/constants/endpoints.dart';
 import 'package:authyo_plugin/models/verify_otp_input_params.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
 import 'models/base_response_model.dart';
 import 'models/send_otp_input_params.dart';
 
@@ -25,13 +24,13 @@ part 'models/authyo_result.dart';
 /// Enum representing the available OTP delivery channels in Authyo.
 enum AuthwayEnum {
   /// Send OTP via WhatsApp
-  Whatsapp('WHATSAPP'),
+  whatsapp('WHATSAPP'),
   /// Send OTP via Email
-  Email('Email'),
+  email('Email'),
   /// Send OTP via SMS
-  SMS('SMS'),
+  sms('SMS'),
   /// Send OTP via Voice Call
-  VoiceCall('VoiceCall');
+  voiceCall('VoiceCall');
 
   /// The string identifier for each auth way (used internally).
   final String authWay;
@@ -77,6 +76,7 @@ class AuthyoService {
   /// [authWay] an optional argument to specify the platform to send OTP such as SMS, Whatsapp, Voice call.
   /// [onVerificationComplete] callback function to check whether OTP validation is successful or not. It should be ONLY used when plugin's default OTP verification dialog is used.
   Future<AuthyoResult> sendOtp({required BuildContext ctx, required String to, bool resendOTP = false, int? expiry, int? otpLength, AuthwayEnum? authWay, void Function(AuthyoResult authyoResult)? onVerificationComplete}) async {
+    final messenger = ScaffoldMessenger.of(ctx);
 
     if (_apiService == null) {
       throw AuthyoInitializationError('AuthyoService has not been initialized, please initialize and try again');
@@ -86,7 +86,7 @@ class AuthyoService {
       return AuthyoResult.failure(InternalServerError("Enter valid Phone or Email address."));
     }
 
-    if (authWay == AuthwayEnum.Email) {
+    if (authWay == AuthwayEnum.email) {
       if (_isValidEmail(to)) {
         AuthyoOTPRequestParams authyoOTPRequestParams = AuthyoOTPRequestParams(authway: authWay.toString(), expiry: expiry, otplength: otpLength, to: to);
         AuthyoResponseModel? response = await _apiService?.post(AuthyoEndpoints.sendOtpEndpoint, body: authyoOTPRequestParams.toJson());
@@ -98,7 +98,7 @@ class AuthyoService {
         bool? success = response.data?.results?.firstWhere((element) => element.success == true, orElse: () => Results(success: false)).success;
         if (response.success == true && success == true) {
           if (resendOTP == false) {
-            if (_showDefaultDialog) {
+            if (_showDefaultDialog && ctx.mounted) {
               showDialog(
                 context: ctx,
                 barrierDismissible: false,
@@ -113,11 +113,11 @@ class AuthyoService {
           return AuthyoResult.failure(InternalServerError("${response.error ?? "Something went wrong while processing your request"} "));
         }
       } else {
-        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Please check the Email address!')));
+        messenger.showSnackBar(SnackBar(content: Text('Please check the Email address!')));
         return AuthyoResult.failure(InternalServerError("Please check the Email address!"));
       }
     }
-    else if (authWay == AuthwayEnum.SMS || authWay == AuthwayEnum.Whatsapp || authWay == AuthwayEnum.VoiceCall) {
+    else if (authWay == AuthwayEnum.sms || authWay == AuthwayEnum.whatsapp || authWay == AuthwayEnum.voiceCall) {
       if (_isValidPhoneNumber(to.startsWith('+') ? to : '+$to')) {
 
         AuthyoOTPRequestParams authyoOTPRequestParams = AuthyoOTPRequestParams(authway: authWay?.authWay, expiry: expiry, otplength: otpLength, to: to);
@@ -130,7 +130,7 @@ class AuthyoService {
         bool? success = response.data?.results?.firstWhere((element) => element.success == true, orElse: () => Results(success: false)).success;
 
         if (response.success == true && success == true) {
-          if (_showDefaultDialog && resendOTP == false) {
+          if (_showDefaultDialog && resendOTP == false && ctx.mounted) {
             showDialog(
               context: ctx,
               barrierDismissible: false,
@@ -159,7 +159,7 @@ class AuthyoService {
       bool? otpSentSuccess = response.data?.results?.firstWhere((element) => element.success == true, orElse: () => Results(success: false)).success;
 
       if (response.success == true && otpSentSuccess == true) {
-        if (_showDefaultDialog && resendOTP == false) {
+        if (_showDefaultDialog && resendOTP == false && ctx.mounted) {
           showDialog(
             context: ctx,
             barrierDismissible: false,
@@ -168,7 +168,7 @@ class AuthyoService {
             },
           );
         } else {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Something went wrong!')));
+          messenger.showSnackBar(SnackBar(content: Text('Something went wrong!')));
         }
 
         return AuthyoResult.success(response);

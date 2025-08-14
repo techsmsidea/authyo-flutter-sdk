@@ -20,7 +20,7 @@ class _MyAppState extends State<MyApp> {
   final TextEditingController phoneNumberController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final ValueNotifier isLoading = ValueNotifier(false);
-  final ValueNotifier<AuthwayEnum> senderSwitch = ValueNotifier<AuthwayEnum>(AuthwayEnum.SMS);
+  final ValueNotifier<AuthwayEnum> senderSwitch = ValueNotifier<AuthwayEnum>(AuthwayEnum.sms);
 
   ValueNotifier<String> currentMaskId = ValueNotifier<String>('');
 
@@ -80,18 +80,16 @@ class _MyAppState extends State<MyApp> {
                                   ),
                                   TextButton(
                                     onPressed: () async {
+                                      final messenger = ScaffoldMessenger.of(context);
                                       AuthyoResult otpResult = await authyoService.verifyOtp(maskId: currentMaskId.value, otp: otpController.text);
 
                                       if (showVerificationDialogFlag == false) {
                                         if (otpResult.error != null) {
                                           isLoading.value = false;
-
-                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
+                                          messenger.showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
                                         } else {
                                           isLoading.value = false;
-
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
+                                          messenger.showSnackBar(SnackBar(
                                               content: Text(otpResult.result?.message ?? ''),
                                             ),
                                           );
@@ -115,10 +113,10 @@ class _MyAppState extends State<MyApp> {
                                     children: [
                                       TextFormField(
                                         controller: phoneNumberController,
-                                        keyboardType: senderSwitch.value == AuthwayEnum.SMS ? TextInputType.phone : TextInputType.emailAddress,
-                                        inputFormatters: senderSwitch.value == AuthwayEnum.SMS ? [FilteringTextInputFormatter.allow((RegExp(r'[0-9+]')))] : [],
+                                        keyboardType: senderSwitch.value == AuthwayEnum.sms ? TextInputType.phone : TextInputType.emailAddress,
+                                        inputFormatters: senderSwitch.value == AuthwayEnum.sms ? [FilteringTextInputFormatter.allow((RegExp(r'[0-9+]')))] : [],
                                         decoration: InputDecoration(
-                                          label: Text(sender == AuthwayEnum.SMS ? 'Phone Number' : "Email Address"),
+                                          label: Text(sender == AuthwayEnum.sms ? 'Phone Number' : "Email Address"),
                                           focusColor: Colors.transparent,
                                           focusedBorder: OutlineInputBorder(
                                             borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1.25),
@@ -132,7 +130,7 @@ class _MyAppState extends State<MyApp> {
                                             borderSide: BorderSide(color: Theme.of(context).primaryColor),
                                             borderRadius: BorderRadius.circular(24),
                                           ),
-                                          hintText: sender == AuthwayEnum.SMS ? "+91-123-456-7890" : "jon@gmail.com",
+                                          hintText: sender == AuthwayEnum.sms ? "+91-123-456-7890" : "jon@gmail.com",
                                           hintStyle: TextStyle(color: Colors.grey.shade400),
                                           labelStyle: TextStyle(color: Colors.grey.shade600),
                                         ),
@@ -143,15 +141,15 @@ class _MyAppState extends State<MyApp> {
                                         children: [
                                           Text('Use Email'),
                                           Switch(
-                                            value: senderSwitch.value == AuthwayEnum.Email,
+                                            value: senderSwitch.value == AuthwayEnum.email,
                                             onChanged: (value) async {
                                               phoneNumberController.text = '';
                                               FocusScope.of(context).unfocus();
 
                                               if (value == true) {
-                                                senderSwitch.value = AuthwayEnum.Email;
+                                                senderSwitch.value = AuthwayEnum.email;
                                               } else {
-                                                senderSwitch.value = AuthwayEnum.SMS;
+                                                senderSwitch.value = AuthwayEnum.sms;
                                               }
                                             },
                                           ),
@@ -159,6 +157,8 @@ class _MyAppState extends State<MyApp> {
                                       ),
                                       TextButton(
                                         onPressed: () async {
+                                          final messenger = ScaffoldMessenger.of(context);
+
                                           FocusScope.of(context).unfocus();
                                           AuthyoResult? otpResult = await authyoService.sendOtp(
                                             ctx: context,
@@ -174,12 +174,12 @@ class _MyAppState extends State<MyApp> {
 
                                           if (otpResult.error != null) {
                                             isLoading.value = false;
-                                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
+                                            messenger.showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
                                           } else {
                                             isLoading.value = false;
                                             if (otpResult.result?.data?.results != null) {
                                               if (otpResult.result!.data!.results!.isEmpty) {
-                                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${otpResult.result?.message}')));
+                                                messenger.showSnackBar(SnackBar(content: Text('Error: ${otpResult.result?.message}')));
                                                 return;
                                               }
                                               final maskResult = otpResult.result?.data?.results?.firstWhere(
@@ -188,18 +188,16 @@ class _MyAppState extends State<MyApp> {
                                                   return otpResult.result!.data!.results![0];
                                                 },
                                               );
-
                                               if (maskResult == null || maskResult.maskId == null) {
-                                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unable to find maskId: ${maskResult!.message}')));
+
+                                                messenger.showSnackBar(SnackBar(content: Text('Unable to find maskId: ${maskResult!.message}')));
                                               } else {
                                                 String? maskId = otpResult.result?.data?.results?.firstWhere((element) => element.maskId != null).maskId;
-                                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('OTP Sent Successfully')));
+                                                messenger.showSnackBar(SnackBar(content: Text('OTP Sent Successfully')));
                                                 currentMaskId.value = maskId ?? '';
                                               }
                                             } else {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(SnackBar(content: Text('Unable to find maskId: ${otpResult.result?.data?.results?.first.message}')));
+                                              messenger.showSnackBar(SnackBar(content: Text('Unable to find maskId: ${otpResult.result?.data?.results?.first.message}')));
                                             }
                                           }
                                         },
