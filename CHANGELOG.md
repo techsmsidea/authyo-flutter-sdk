@@ -1,3 +1,9 @@
+## [1.0.3] - 2025-08-18
+
+### Improved
+- Clear and helpful error message now shown when `AuthyoService.init()` is called without `clientId` or `clientSecret`.
+- The message includes a link to the Authyo dashboard, making it easier for developers to obtain their credentials quickly.
+
 ## [1.0.2] - 2025-08-18
 
 - Code formatting and LICENSE modified. 

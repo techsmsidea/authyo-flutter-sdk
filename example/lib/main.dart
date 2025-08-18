@@ -32,8 +32,8 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     authyoService.init(
-      clientId: "YOUR-CLIENT-ID",
-      clientSecret: "YOUR-CLIENT-SECRET",
+      clientId: null, // YOUR-CLIENT-ID
+      clientSecret: null, // YOUR-CLIENT-SECRET
       showVerificationDialog: showVerificationDialogFlag,
     );
   }

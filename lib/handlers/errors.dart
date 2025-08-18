@@ -6,6 +6,11 @@ class AuthyoInitializationError extends AuthyoError {
   AuthyoInitializationError(super.message, {super.code});
 
   @override
+  String toString() {
+    return 'AuthyoInitializationError: $message';
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     'type': 'AuthyoInitializationError',
     'message': message,

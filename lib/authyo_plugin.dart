@@ -56,12 +56,22 @@ class AuthyoService {
   /// use the built-in verification dialog with [showVerificationDialog].
   /// Call this method before making any [sendOtp] or [verifyOtp] requests.
   void init({
-    required String clientId,
-    required String clientSecret,
+    String? clientId,
+    String? clientSecret,
     Duration? connectTimeout,
     Duration? receiveTimeout,
     bool? showVerificationDialog,
   }) {
+    if (clientId == null || clientSecret == null) {
+      throw AuthyoInitializationError('''
+Oops! Looks like you forgot to pass clientId or clientSecret to AuthyoService.init().
+These are required to authenticate with Authyo.
+
+🔐 Grab your credentials here:
+https://app.authyo.io/account/welcome?ref=HARSCE2BE4&utm_source=partner&utm_medium=referral&utm_campaign=partner-program
+''');
+    }
+
     _apiService = _ApiService(
       clientId: clientId,
       clientSecret: clientSecret,
