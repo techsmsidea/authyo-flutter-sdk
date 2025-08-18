@@ -2,8 +2,8 @@ part of '../authyo_plugin.dart';
 
 /// Represents an Plugin Initialization Error
 /// Mostly faced when user has not initialized the [AuthyoService] before calling [sendOtp] or [verifyOtp]
-class AuthyoInitializationError extends AuthyoError{
-  AuthyoInitializationError(super.message,{super.code});
+class AuthyoInitializationError extends AuthyoError {
+  AuthyoInitializationError(super.message, {super.code});
 
   @override
   Map<String, dynamic> toJson() => {
@@ -11,9 +11,7 @@ class AuthyoInitializationError extends AuthyoError{
     'message': message,
     'code': code,
   };
-
 }
-
 
 /// Represents a 400 BadRequest error.
 class BadRequestError extends AuthyoError {
@@ -114,7 +112,6 @@ class TimeoutError extends AuthyoError {
     'code': code,
   };
 }
-
 
 AuthyoError handleHttpError(int? statusCode, String message) {
   switch (statusCode) {

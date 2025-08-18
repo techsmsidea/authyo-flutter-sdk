@@ -6,7 +6,6 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 class MockAuthyoPluginPlatform
     with MockPlatformInterfaceMixin
     implements AuthyoPluginPlatform {
-
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
 }
@@ -21,6 +20,5 @@ void main() {
   test('getPlatformVersion', () async {
     MockAuthyoPluginPlatform fakePlatform = MockAuthyoPluginPlatform();
     AuthyoPluginPlatform.instance = fakePlatform;
-
   });
 }

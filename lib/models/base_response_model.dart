@@ -9,7 +9,14 @@ class AuthyoResponseModel {
   String? error;
   String? errorCode;
 
-  AuthyoResponseModel({this.success, this.message, this.data, this.status, this.error, this.errorCode});
+  AuthyoResponseModel({
+    this.success,
+    this.message,
+    this.data,
+    this.status,
+    this.error,
+    this.errorCode,
+  });
 
   /// Creates a AuthyoResponseModel model from json.
   AuthyoResponseModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +36,7 @@ class AuthyoResponseModel {
     error = json['error'].toString();
     errorCode = json['errorCode'].toString();
   }
+
   /// Creates a json model from AuthyoResponseModel.
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
@@ -98,7 +106,8 @@ class User {
 
   User({this.phone, this.userId});
 
-  factory User.fromJson(Map<String, dynamic> json) => User(phone: json["phone"], userId: json["userId"]);
+  factory User.fromJson(Map<String, dynamic> json) =>
+      User(phone: json["phone"], userId: json["userId"]);
 
   Map<String, dynamic> toJson() => {"phone": phone, "userId": userId};
 }
@@ -113,7 +122,15 @@ class Results {
   int? createdTime;
   int? expiretime;
 
-  Results({this.success, this.message, this.to, this.authtype, this.maskId, this.createdTime, this.expiretime});
+  Results({
+    this.success,
+    this.message,
+    this.to,
+    this.authtype,
+    this.maskId,
+    this.createdTime,
+    this.expiretime,
+  });
 
   Results.fromJson(Map<String, dynamic> json) {
     success = json['success'];

@@ -8,7 +8,7 @@ class AuthyoOTPRequestParams {
 
   AuthyoOTPRequestParams.fromJson(Map<String, dynamic> json) {
     to = json['to'];
-    expiry = json['expiry'];  
+    expiry = json['expiry'];
     otplength = json['otplength'];
     authway = json['authway'];
   }

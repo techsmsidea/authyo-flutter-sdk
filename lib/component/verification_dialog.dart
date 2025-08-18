@@ -11,18 +11,23 @@ import 'package:flutter/services.dart';
 /// allows OTP resend via different methods (SMS, WhatsApp, etc.), and
 /// notifies the parent on successful verification.
 class PhoneVerificationDialog extends StatefulWidget {
-  const PhoneVerificationDialog({super.key, required this.authyoRes, required this.to, this.onVerificationComplete});
+  const PhoneVerificationDialog({
+    super.key,
+    required this.authyoRes,
+    required this.to,
+    this.onVerificationComplete,
+  });
 
   final AuthyoResult authyoRes;
   final String to;
   final void Function(AuthyoResult authyoResult)? onVerificationComplete;
 
   @override
-  State<PhoneVerificationDialog> createState() => _PhoneVerificationDialogState();
+  State<PhoneVerificationDialog> createState() =>
+      _PhoneVerificationDialogState();
 }
 
 class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
-
   final AuthyoService _authyoService = AuthyoService.instance;
   final TextEditingController _phoneNumberController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -58,7 +63,9 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
 
         if (maskResult == null || maskResult.maskId == null) {
         } else {
-          String? maskId = widget.authyoRes.result?.data?.results?.firstWhere((element) => element.maskId != null).maskId;
+          String? maskId = widget.authyoRes.result?.data?.results
+              ?.firstWhere((element) => element.maskId != null)
+              .maskId;
           currentMaskId = maskId;
           _showOtpPage.value = true;
         }
@@ -117,19 +124,33 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
               ),
             ),
             Center(
-              child: Padding(padding: const EdgeInsets.only(bottom: 16), child: Image.asset('packages/authyo_plugin/res/authyo-logo.png')),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Image.asset(
+                  'packages/authyo_plugin/res/authyo-logo.png',
+                ),
+              ),
             ),
 
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.start,
-              children: [Text(widget.to.contains('@') ? _maskEmail() : _maskPhone(), style: TextStyle(fontSize: 12), textAlign: TextAlign.left)],
+              children: [
+                Text(
+                  widget.to.contains('@') ? _maskEmail() : _maskPhone(),
+                  style: TextStyle(fontSize: 12),
+                  textAlign: TextAlign.left,
+                ),
+              ],
             ),
 
             _buildOtpForm(),
 
             Container(
               height: 44,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), color: AppColor.primary,),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                color: AppColor.primary,
+              ),
               width: MediaQuery.of(context).size.width * 0.8,
               child: TextButton(
                 onPressed: () async {
@@ -137,21 +158,27 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                   if (_formKey.currentState!.validate()) {
                     _isLoading.value = true;
 
-                    AuthyoResult otpResult = await AuthyoService.instance.verifyOtp(maskId: currentMaskId ?? '', otp: _otpTextController.text);
+                    AuthyoResult otpResult = await AuthyoService.instance
+                        .verifyOtp(
+                          maskId: currentMaskId ?? '',
+                          otp: _otpTextController.text,
+                        );
 
                     if (otpResult.error != null) {
                       _isLoading.value = false;
-                      messenger.showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Oops! ${otpResult.error?.message}'),
+                        ),
+                      );
                     } else {
                       _isLoading.value = false;
 
                       messenger.showSnackBar(
-                        SnackBar(
-                          content: Text('${otpResult.result?.message}'),
-                        ),
+                        SnackBar(content: Text('${otpResult.result?.message}')),
                       );
 
-                      if(context.mounted){
+                      if (context.mounted) {
                         Navigator.pop(context);
                         FocusScope.of(context).unfocus();
                       }
@@ -160,7 +187,10 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                     widget.onVerificationComplete!(otpResult);
                   }
                 },
-                child: Text('Verify OTP', style: TextStyle(color: Colors.white),),
+                child: Text(
+                  'Verify OTP',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
             Padding(
@@ -170,7 +200,10 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Powered By', style: TextStyle(fontSize: 14)),
-                  Text('Authyo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Authyo',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
@@ -206,7 +239,10 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                       focusColor: Colors.transparent,
 
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: AppColor.primary, width: 1.25),
+                        borderSide: BorderSide(
+                          color: AppColor.primary,
+                          width: 1.25,
+                        ),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       border: OutlineInputBorder(
@@ -243,19 +279,27 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                                     });
                                   }
                                 },
-                                child: Text('Resend OTP', style: TextStyle(color: AppColor.primary),),
+                                child: Text(
+                                  'Resend OTP',
+                                  style: TextStyle(color: AppColor.primary),
+                                ),
                               )
                             : Column(
                                 spacing: 16,
                                 children: [
-                                  Text('Resend OTP to: ', textAlign: TextAlign.left),
+                                  Text(
+                                    'Resend OTP to: ',
+                                    textAlign: TextAlign.left,
+                                  ),
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8.0),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: !widget.to.contains('@')
                                           ? AuthwayEnum.values.map((e) {
-                                              return e.authWay == AuthwayEnum.email.authWay
+                                              return e.authWay ==
+                                                      AuthwayEnum.email.authWay
                                                   ? SizedBox()
                                                   : InkWell(
                                                       onTap: () async {
@@ -263,26 +307,45 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                                                         _resetTimer();
                                                         _showOptions = false;
 
-                                                        AuthyoResult res = await _resendOTP();
+                                                        AuthyoResult res =
+                                                            await _resendOTP();
                                                         if (res.error == null) {
                                                           _startTimer();
                                                         }
                                                       },
                                                       child: Container(
                                                         decoration: BoxDecoration(
-                                                            shape: BoxShape.circle,
+                                                          shape:
+                                                              BoxShape.circle,
                                                           color: Colors.white,
                                                           boxShadow: [
                                                             BoxShadow(
-                                                                color: const Color.fromRGBO(0, 0, 0, 0.15),
-                                                                spreadRadius: 2,
-                                                                blurRadius: 4
-                                                            )
-                                                          ]
+                                                              color:
+                                                                  const Color.fromRGBO(
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    0.15,
+                                                                  ),
+                                                              spreadRadius: 2,
+                                                              blurRadius: 4,
+                                                            ),
+                                                          ],
                                                         ),
-                                                        padding: EdgeInsets.all(10),
-                                                        margin: EdgeInsets.symmetric(horizontal: 20),
-                                                        child: Image.asset('packages/authyo_plugin/res/${e.authWay}.png', width: 24, height: 24, color: AppColor.primary),
+                                                        padding: EdgeInsets.all(
+                                                          10,
+                                                        ),
+                                                        margin:
+                                                            EdgeInsets.symmetric(
+                                                              horizontal: 20,
+                                                            ),
+                                                        child: Image.asset(
+                                                          'packages/authyo_plugin/res/${e.authWay}.png',
+                                                          width: 24,
+                                                          height: 24,
+                                                          color:
+                                                              AppColor.primary,
+                                                        ),
                                                       ),
                                                     );
                                             }).toList()
@@ -312,16 +375,25 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
   Future<AuthyoResult> _resendOTP() async {
     _isLoading.value = true;
     final messenger = ScaffoldMessenger.of(context);
-    AuthyoResult otpResult = await _authyoService.sendOtp(ctx: context, to: widget.to, resendOTP: true, authWay: _authway);
+    AuthyoResult otpResult = await _authyoService.sendOtp(
+      ctx: context,
+      to: widget.to,
+      resendOTP: true,
+      authWay: _authway,
+    );
 
     if (otpResult.error != null) {
       _isLoading.value = false;
-      messenger.showSnackBar(SnackBar(content: Text('Oops! ${otpResult.error?.message}')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('Oops! ${otpResult.error?.message}')),
+      );
     } else {
       _isLoading.value = false;
       if (otpResult.result?.data?.results != null) {
         if (otpResult.result!.data!.results!.isEmpty) {
-          messenger.showSnackBar(SnackBar(content: Text('Error: ${otpResult.result?.message}')));
+          messenger.showSnackBar(
+            SnackBar(content: Text('Error: ${otpResult.result?.message}')),
+          );
         }
         final maskResult = otpResult.result?.data?.results?.firstWhere(
           (element) => element.maskId != null,
@@ -330,22 +402,36 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
           },
         );
 
-
         if (maskResult == null || maskResult.maskId == null) {
-          messenger.showSnackBar(SnackBar(content: Text('Error in sending OTP. Please check entered details.')));
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error in sending OTP. Please check entered details.',
+              ),
+            ),
+          );
         } else {
-          String? maskId = otpResult.result?.data?.results?.firstWhere((element) => element.maskId != null).maskId;
-          messenger.showSnackBar(SnackBar(content: Text('OTP Sent Successfully')));
+          String? maskId = otpResult.result?.data?.results
+              ?.firstWhere((element) => element.maskId != null)
+              .maskId;
+          messenger.showSnackBar(
+            SnackBar(content: Text('OTP Sent Successfully')),
+          );
           _phoneNumberController.text = '';
           currentMaskId = maskId ?? '';
-
         }
       } else {
-        messenger.showSnackBar(SnackBar(content: Text('Error in sending OTP. Please check entered details.')));
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error in sending OTP. Please check entered details.',
+            ),
+          ),
+        );
       }
     }
     return otpResult;
-   }
+  }
 
   String _maskPhone() {
     return 'OTP has been sent to ${'X' * (widget.to.length - 4)}${widget.to.substring(widget.to.length - 4, widget.to.length)}';

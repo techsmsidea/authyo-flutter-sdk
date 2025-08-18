@@ -1,4 +1,3 @@
-
 part of '../authyo_plugin.dart';
 
 class AuthyoResult {
