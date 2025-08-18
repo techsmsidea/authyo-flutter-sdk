@@ -237,7 +237,7 @@ Read the [full documentation](https://authyo.io/docs) for implementation steps, 
 
 ## 🧪 Try It Free
 
-Sign up at [authyo.io](https://authyo.io) and get free credits to test MFA in your app.
+Sign up at [authyo.io](https://app.authyo.io/account/welcome?ref=HARSCE2BE4&utm_source=partner&utm_medium=referral&utm_campaign=partner-program) and get free credits to test MFA in your app.
 
 ## 🧍 Affiliate Program
 
