@@ -12,6 +12,25 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<!-- Example only: allow plain http to a local Authyo backend. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>io.authyo.oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>authyo</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleName</key>
 	<string>authyo_plugin_example</string>
 	<key>CFBundlePackageType</key>

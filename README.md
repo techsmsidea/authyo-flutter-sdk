@@ -122,13 +122,144 @@ else{
 
 ---
 
+## 🎨 Design styles & dashboard customization
+
+The built-in dialog can be rendered in seven design languages. The look is resolved in this order (later wins):
+
+1. Built-in defaults (Flat, Authyo blue)
+2. **Your Authyo dashboard** — design style, colours, logo, button shape, layout, resend timer, enabled channels and social logins are fetched once (`GET /api/v1/authyoclient/mobileconfig`), cached on device and refreshed in the background.
+3. Overrides passed to `init()` / `sendOtp()`
+
+| `AuthyoDesignStyle` | Look |
+|---|---|
+| `flat` (default) | Solid colours, crisp borders — the 1.0.x look |
+| `flat2` | Flat with soft elevation |
+| `minimalism` | Monochrome, underline input, thin outlines |
+| `skeuomorphism` | Glossy gradients, bevels, recessed input |
+| `claymorphism` | Pastel, puffy, large radii |
+| `glassmorphism` | Frosted translucent card over a blurred backdrop |
+| `neumorphism` | Extruded / pressed-in surfaces on one background colour |
+
+```dart
+authyoService.init(
+  clientId: "YOUR_CLIENT_ID",
+  clientSecret: "YOUR_CLIENT_SECRET",
+  // Optional – pin a style instead of following the dashboard:
+  designStyle: AuthyoDesignStyle.glassmorphism,
+  // Optional – partial theme override (anything unset comes from the dashboard / defaults):
+  theme: const AuthyoTheme(primary: Color(0xFF0EA5E9), hideBranding: true),
+);
+
+// Per-call override:
+await authyoService.sendOtp(ctx: context, to: '+1234567890', designStyle: AuthyoDesignStyle.claymorphism);
+
+// Or change at runtime:
+authyoService.setDesignStyle(AuthyoDesignStyle.neumorphism);
+authyoService.setDesignStyle(null); // follow the dashboard again
+```
+
+`AuthyoTheme` fields map 1:1 to the dashboard customization: `buttonColor`, `buttonTextColor`, `inputBackground`, `inputBorder`, `inputText`, `smButton*` (social buttons), `headerText`/`bodyText` + colours, `logoUrl`, `hideBranding`, `resendButtonTimer`, `buttonStyle` (rectangular / rounded / pill), `mainLayout` (left / centre / right) and `socialMediaLayout` (top / bottom).
+
+### Reading the remote config yourself
+
+```dart
+final cfg = await authyoService.loadConfig();      // cached → instant
+cfg.designStyle;   // AuthyoDesignStyle? (null if the dashboard has none)
+cfg.authMethods;   // ["Sms", "Whatsapp", "Email"]
+cfg.socialLogins;  // [AuthyoSocialLogin(provider: google, id: "123"), ...]
+cfg.otpLength;
+```
+
+### Showing the dialog for an OTP you already sent
+
+```dart
+final res = await authyoService.requestOtp(to: '+1234567890', authWay: AuthwayEnum.sms); // no UI
+await authyoService.showVerificationDialog(context, sendResult: res, to: '+1234567890',
+    onVerificationComplete: (r) { /* ... */ });
+```
+
+---
+
+## 🔑 Social login (Google, Microsoft, GitHub, LinkedIn)
+
+Providers you enable on the dashboard (Application → Social Media Login) appear automatically in the dialog. Tapping one opens the provider in the system browser; the Authyo callback redirects to `authyo://oauth/callback` and the result is delivered to `onVerificationComplete` with the session JWT in `result.data?.token`.
+
+You can also trigger it without the dialog:
+
+```dart
+final cfg = await authyoService.loadConfig();
+final result = await authyoService.socialLogin(cfg.socialLogins.first);
+```
+
+---
+
+## 🪞 Same flow as the web widget
+
+The dialog behaves exactly like the Authyo web widget (`auth-sdk.js`) on the same application:
+
+| Step | Web widget | Flutter dialog |
+|---|---|---|
+| Top-left back button | returns to the identity form | closes the dialog (your form is behind it) |
+| "OTP sent to: … **Change**" | rebuilds the identity form | closes the dialog |
+| OTP entry | one box per digit, auto-advance, paste fills all | same (`otpLength` boxes) |
+| Verify | automatic on the last digit (no button) | same |
+| Countdown | `OTP will expire in m:ss` from the server's `expireTime` | same; falls back to the dashboard resend timer |
+| After expiry | red notice + **Resend** (email) / **Sms · Whatsapp · VoiceCall** (phone, only enabled channels) | same, styled as primary buttons |
+| Resend | passes the dashboard resend timer as the new expiry | same (`expiry`) |
+| Social logins | icon row under an `OR` divider (or on top) | same |
+| Success | green ring + check + "Verified successfully" inside the card | same, then the dialog closes and `onVerificationComplete` fires |
+| Footer | Terms & Privacy Policy links, "Powered by Authyo" | same (`hideBranding` hides the second line) |
+| Hide OTP | digits masked | same (`isOtpHide`) |
+
+### One-time platform setup (required for social login)
+
+**Android** — add to `android/app/src/main/AndroidManifest.xml` inside `<application>`:
+```xml
+<activity android:name="com.linusu.flutter_web_auth_2.CallbackActivity" android:exported="true">
+  <intent-filter android:label="authyo_oauth_callback">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="authyo" />
+  </intent-filter>
+</activity>
+```
+
+**iOS** — add to `ios/Runner/Info.plist`:
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleTypeRole</key><string>Editor</string>
+    <key>CFBundleURLName</key><string>io.authyo.oauth</string>
+    <key>CFBundleURLSchemes</key><array><string>authyo</string></array>
+  </dict>
+</array>
+```
+
+### Using your own native sign-in SDKs instead
+
+```dart
+authyoService.init(
+  clientId: ..., clientSecret: ...,
+  onSocialLogin: (login, authUrl) async {
+    // e.g. run google_sign_in here, or open authUrl yourself and
+    // return AuthyoService.parseSocialCallback(callbackUri, login);
+  },
+);
+```
+
+---
+
 ## 📚 API Reference
 
 
 #### Methods
 ##### init
 ```                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-init({required String clientId, required String clientSecret, Duration? connectTimeout, Duration? receiveTimeout, bool? showVerificationDialog})
+init({required String clientId, required String clientSecret, Duration? connectTimeout, Duration? receiveTimeout,
+      bool? showVerificationDialog, AuthyoDesignStyle? designStyle, AuthyoTheme? theme,
+      AuthyoSocialLoginHandler? onSocialLogin, bool prefetchConfig = true})
 ```
 ##### sendOtp
 ```
@@ -137,7 +268,9 @@ required String to,
 int otpLength = 6,                 
 int? expiry,
 AuthwayEnum? authWay,
-void Function(AuthyoResult authyoResult)? onVerificationComplete
+void Function(AuthyoResult authyoResult)? onVerificationComplete,
+AuthyoDesignStyle? designStyle,
+AuthyoTheme? theme,
 });
 ```
 - **to**: Phone number or email (required)
@@ -145,6 +278,7 @@ void Function(AuthyoResult authyoResult)? onVerificationComplete
 - **expiry**: OTP expiry in seconds (optional)
 - **authWay**: Channel to send OTP (optional, defaults to dashboard preference)
 - **onVerificationComplete**: Optional callback function which provide if authentication is successful or not. Only required when plugin's default OTP verification dialog is being used.
+- **designStyle** / **theme**: Optional per-call overrides of the dialog look (see *Design styles*).
 
 Returns: `AuthyoResult`
 
@@ -155,7 +289,19 @@ Future<AuthyoResult> verifyOtp({required String maskId, required String otp})
 - **maskId**: Received from `sendOtp` response (required)
 - **otp**: The OTP entered by the user (required)
 
-Returns: `AuthyoResult
+Returns: `AuthyoResult`
+
+##### Pointing at another server
+```dart
+authyoService.init(clientId: ..., clientSecret: ..., baseUrl: 'https://staging.authyo.io');
+```
+
+##### Other methods
+- `requestOtp({to, expiry, otpLength, authWay})` — send an OTP with no UI.
+- `showVerificationDialog(context, {sendResult, to, onVerificationComplete, designStyle, theme, otpLength})` — open the dialog for an already-sent OTP.
+- `loadConfig({forceRefresh})` / `currentConfig` / `clearConfigCache()` — dashboard configuration.
+- `setDesignStyle(style)` / `setTheme(theme)` / `setShowVerificationDialog(bool)` — runtime switches.
+- `socialLogin(AuthyoSocialLogin)` — run a social provider sign-in.
 
 ---
 

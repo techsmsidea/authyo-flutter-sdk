@@ -61,7 +61,15 @@ class Data {
   int? expiresIn;
   User? user;
 
-  Data({this.isTried, this.isSent, this.results});
+  Data({
+    this.isTried,
+    this.isSent,
+    this.results,
+    this.tokenType,
+    this.token,
+    this.expiresIn,
+    this.user,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     isTried = json['isTried'];
@@ -103,13 +111,39 @@ class Data {
 class User {
   String? phone;
   String? userId;
+  String? email;
+  String? identity;
+  String? displayName;
 
-  User({this.phone, this.userId});
+  /// Channel the identity was verified through (e.g. `sms`, `google`).
+  String? channel;
 
-  factory User.fromJson(Map<String, dynamic> json) =>
-      User(phone: json["phone"], userId: json["userId"]);
+  User({
+    this.phone,
+    this.userId,
+    this.email,
+    this.identity,
+    this.displayName,
+    this.channel,
+  });
 
-  Map<String, dynamic> toJson() => {"phone": phone, "userId": userId};
+  factory User.fromJson(Map<String, dynamic> json) => User(
+    phone: json["phone"],
+    userId: json["userId"],
+    email: json["email"],
+    identity: json["identity"],
+    displayName: json["displayName"],
+    channel: json["channel"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "phone": phone,
+    "userId": userId,
+    "email": email,
+    "identity": identity,
+    "displayName": displayName,
+    "channel": channel,
+  };
 }
 
 /// Represents an individual OTP result including delivery status and metadata.
@@ -139,7 +173,8 @@ class Results {
     authtype = json['authtype'];
     maskId = json['maskId'];
     createdTime = json['createdTime'];
-    expiretime = json['expiretime'];
+    // The API spells it `expireTime`; older builds used `expiretime`.
+    expiretime = json['expireTime'] ?? json['expiretime'];
   }
 
   Map<String, dynamic> toJson() {

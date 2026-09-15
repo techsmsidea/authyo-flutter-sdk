@@ -1,3 +1,25 @@
+## [1.1.0] - 2026-09-12
+
+### Added
+- Seven selectable design styles for the built-in dialog: Flat (default), Flat 2.0, Minimalism, Skeuomorphism, Claymorphism, Glassmorphism, Neumorphism (`AuthyoDesignStyle`).
+- `AuthyoTheme` — colours, texts, logo, button shape, layout and resend timer, mirroring the dashboard customization; mergeable so dashboard values and local overrides layer cleanly.
+- Remote configuration: the SDK fetches the dashboard's design style, customization, enabled channels and social logins (`AuthyoService.loadConfig()`), caches them on device and refreshes in the background. The OTP flow never blocks on it.
+- Social login (Google, Microsoft, GitHub, LinkedIn) inside the dialog and via `AuthyoService.socialLogin()`, using the system browser and the `authyo://oauth/callback` scheme. `onSocialLogin` lets host apps plug in native SDKs.
+- `init()` options: `designStyle`, `theme`, `onSocialLogin`, `prefetchConfig`; `sendOtp()` options: `designStyle`, `theme`.
+- `requestOtp()` (send without UI), `showVerificationDialog()`, `setDesignStyle()`, `setTheme()`, `setShowVerificationDialog()`.
+- The dialog follows the web widget's OTP flow step for step: top-left back button, "OTP sent to: … Change", one box per digit with auto-advance / paste / auto-verify on the last digit (no Verify button), `OTP will expire in m:ss` from the server's `expireTime`, red expiry notice with **Resend** / **Sms · Whatsapp · VoiceCall** buttons for the channels enabled on the dashboard, resend passes the dashboard timer as the new expiry, social logins as an icon row under `OR`, an in-card "Verified successfully" badge before closing, Terms & Privacy footer, and `isOtpHide`.
+- `AuthyoStyle` gained `decorateInput`, `otpBox`, `backButton`, `sentToRow`, `statusText`, `verifiedBadge` (styles decorate the digit boxes the same way as the single field); `AuthyoVerifiedBadge` widget.
+- `PhoneVerificationDialog` gained `verifiedDisplayDuration` and a test-only `service` seam (`AuthyoService.forTesting`).
+- `User` model gains `email`, `identity`, `displayName`, `channel`.
+
+### Changed
+- Dialog logic extracted into `VerificationController`; rendering is delegated to an `AuthyoStyle` per design.
+- `sendOtp` for `AuthwayEnum.email` now sends `"Email"` as `authway` (previously the enum's `toString()`).
+- Example app gained a design-style picker and a built-in-dialog toggle.
+
+### Dependencies
+- `shared_preferences`, `flutter_web_auth_2`, `url_launcher` (Terms / Privacy links).
+
 ## [1.0.3] - 2025-08-18
 
 ### Improved

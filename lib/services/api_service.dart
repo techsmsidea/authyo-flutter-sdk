@@ -11,17 +11,27 @@ class _ApiService {
     Duration? connectTimeout,
     Duration? receiveTimeout,
     Duration? sendTimeout,
-  }) : _dio = Dio(
+    String? baseUrl,
+  }) : serverUrl = AuthyoEndpoints.normalizeBaseUrl(baseUrl),
+       _dio = Dio(
          BaseOptions(
            sendTimeout: sendTimeout ?? const Duration(seconds: 30),
            connectTimeout: connectTimeout ?? const Duration(seconds: 30),
            receiveTimeout: receiveTimeout ?? const Duration(seconds: 30),
            headers: {},
-           baseUrl: AuthyoEndpoints.baseUrlEndpoint,
+           baseUrl:
+               '${AuthyoEndpoints.normalizeBaseUrl(baseUrl)}${AuthyoEndpoints.apiPath}',
          ),
        ) {
     setClientData(clientId: clientId, clientSecret: clientSecret);
   }
+
+  /// Server root, e.g. `https://authyo.io` or `http://10.0.2.2:5000`.
+  final String serverUrl;
+
+  /// Absolute URL of a client-API path (`/mobileconfig`, `/authlogin`).
+  String clientUrl(String path) =>
+      '$serverUrl${AuthyoEndpoints.clientPath}$path';
 
   // Update token and headers if needed
   void setClientData({required String clientId, required String clientSecret}) {
@@ -94,6 +104,43 @@ class _ApiService {
     } catch (e) {
       return AuthyoResponseModel.withError({"error": "$e", "errorCode": "500"});
     }
+  }
+
+  /// GET that returns the raw JSON map (used for configuration endpoints
+  /// whose shape differs from [AuthyoResponseModel]). Throws [AuthyoError].
+  Future<Map<String, dynamic>> getRaw(
+    String url, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.get(url, queryParameters: queryParameters);
+      return _asMap(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// POST that returns the raw JSON map. Throws [AuthyoError].
+  Future<Map<String, dynamic>> postRaw(
+    String url, {
+    Map<String, dynamic>? body,
+  }) async {
+    try {
+      final response = await _dio.post(url, data: body);
+      return _asMap(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    if (data is String && data.isNotEmpty) {
+      final decoded = jsonDecode(data);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    }
+    throw UnknownError('Unexpected response format');
   }
 
   // Centralized error handling

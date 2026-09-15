@@ -1,6 +1,6 @@
 name: authyo_plugin
 description: "Add secure, multi-channel MFA (SMS, WhatsApp, Email, Call) to your Flutter app with Authyo. Fast, simple, and flexible."
-version: 1.0.3
+version: 1.1.0
 homepage: https://authyo.io
 repository: https://github.com/techsmsidea/authyo-flutter-sdk.git
 documentation: https://authyo.io/docs
@@ -17,6 +17,9 @@ dependencies:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
   dio: ^5.8.0+1
+  shared_preferences: ^2.3.0
+  flutter_web_auth_2: ^4.1.0
+  url_launcher: ^6.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

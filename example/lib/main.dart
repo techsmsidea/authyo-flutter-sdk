@@ -1,361 +1,291 @@
-import 'package:flutter/material.dart';
 import 'package:authyo_plugin/authyo_plugin.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+/// Replace with the credentials from https://app.authyo.io → Applications.
+const String kClientId = 'YOUR-CLIENT-ID';
+const String kClientSecret = 'YOUR-CLIENT-SECRET';
+
+/// Authyo server. Leave null for production (https://authyo.io). For a local
+/// backend use e.g. 'http://10.0.2.2:5000' (Android emulator),
+/// 'http://localhost:5000' (iOS simulator) or 'http://YOUR-LAN-IP:5000'
+/// (physical device). Can also be passed with
+/// `flutter run --dart-define=AUTHYO_BASE_URL=http://...`.
+const String? kBaseUrl = String.fromEnvironment('AUTHYO_BASE_URL') == ''
+    ? null
+    : String.fromEnvironment('AUTHYO_BASE_URL');
 
 void main() {
   runApp(const MyApp());
 }
 
-final GlobalKey<NavigatorState> navigationKey = GlobalKey<NavigatorState>();
-
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Authyo Plugin',
+      theme: ThemeData(
+        colorSchemeSeed: const Color(0xFF2D398F),
+        useMaterial3: true,
+      ),
+      home: const DemoPage(),
+    );
+  }
 }
 
-class _MyAppState extends State<MyApp> {
+class DemoPage extends StatefulWidget {
+  const DemoPage({super.key});
+
+  @override
+  State<DemoPage> createState() => _DemoPageState();
+}
+
+class _DemoPageState extends State<DemoPage> {
   final AuthyoService authyoService = AuthyoService.instance;
-  final TextEditingController phoneNumberController = TextEditingController();
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final ValueNotifier isLoading = ValueNotifier(false);
-  final ValueNotifier<AuthwayEnum> senderSwitch = ValueNotifier<AuthwayEnum>(
-    AuthwayEnum.sms,
-  );
+  final TextEditingController targetController = TextEditingController();
+  final TextEditingController otpController = TextEditingController();
 
-  ValueNotifier<String> currentMaskId = ValueNotifier<String>('');
+  bool useEmail = false;
+  bool useBuiltInDialog = true;
 
-  bool showVerificationDialogFlag = true;
+  /// null = follow whatever is configured on the Authyo dashboard.
+  AuthyoDesignStyle? selectedStyle;
+
+  String? currentMaskId;
+  AuthyoWidgetConfig? remoteConfig;
+  bool sending = false;
 
   @override
   void initState() {
     super.initState();
     authyoService.init(
-      clientId: null, // YOUR-CLIENT-ID
-      clientSecret: null, // YOUR-CLIENT-SECRET
-      showVerificationDialog: showVerificationDialogFlag,
+      clientId: kClientId,
+      clientSecret: kClientSecret,
+      baseUrl: kBaseUrl,
+      showVerificationDialog: useBuiltInDialog,
+      // Optional local overrides – comment out to follow the dashboard:
+      // designStyle: AuthyoDesignStyle.glassmorphism,
+      // theme: const AuthyoTheme(primary: Colors.teal),
     );
+    authyoService.loadConfig().then((cfg) {
+      if (mounted) setState(() => remoteConfig = cfg);
+    });
   }
 
-  TextEditingController otpController = TextEditingController();
+  @override
+  void dispose() {
+    targetController.dispose();
+    otpController.dispose();
+    super.dispose();
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Future<void> _sendOtp() async {
+    FocusScope.of(context).unfocus();
+    setState(() => sending = true);
+    final res = await authyoService.sendOtp(
+      ctx: context,
+      to: targetController.text.trim(),
+      authWay: useEmail ? AuthwayEnum.email : AuthwayEnum.sms,
+      designStyle: selectedStyle,
+      onVerificationComplete: (result) {
+        if (result.error == null) {
+          _snack('✅ Verified: ${result.result?.message}');
+          setState(() => currentMaskId = null);
+        } else {
+          _snack('❌ ${result.error?.message}');
+        }
+      },
+    );
+    if (!mounted) return;
+    setState(() => sending = false);
+
+    if (res.error != null) {
+      _snack('Oops! ${res.error?.message}');
+      return;
+    }
+    final maskId = res.result?.data?.results
+        ?.where((r) => r.maskId != null)
+        .map((r) => r.maskId)
+        .firstOrNull;
+    _snack('OTP sent successfully');
+    if (!useBuiltInDialog) setState(() => currentMaskId = maskId);
+  }
+
+  Future<void> _verifyOtp() async {
+    final res = await authyoService.verifyOtp(
+      maskId: currentMaskId ?? '',
+      otp: otpController.text.trim(),
+    );
+    if (!mounted) return;
+    if (res.error != null) {
+      _snack('Oops! ${res.error?.message}');
+    } else {
+      _snack('✅ ${res.result?.message}');
+      otpController.clear();
+      setState(() => currentMaskId = null);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Authyo Plugin')),
-        body: Builder(
-          builder: (BuildContext context) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 12,
-                ),
-                child: ValueListenableBuilder(
-                  valueListenable: currentMaskId,
-                  builder: (context, value, child) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        value.isNotEmpty && showVerificationDialogFlag == false
-                            ? Column(
-                                children: [
-                                  TextField(
-                                    controller: otpController,
-                                    textAlign: TextAlign.center,
-                                    decoration: InputDecoration(
-                                      label: Text('Enter OTP'),
-                                      focusColor: Colors.transparent,
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Theme.of(context).primaryColor,
-                                          width: 1.25,
-                                        ),
-                                        borderRadius: BorderRadius.circular(24),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Theme.of(context).primaryColor,
-                                        ),
-                                        borderRadius: BorderRadius.circular(24),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          color: Theme.of(context).primaryColor,
-                                        ),
-                                        borderRadius: BorderRadius.circular(24),
-                                      ),
-                                      hintText: '******',
-                                      hintStyle: TextStyle(
-                                        color: Colors.grey.shade400,
-                                      ),
-                                      labelStyle: TextStyle(
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () async {
-                                      final messenger = ScaffoldMessenger.of(
-                                        context,
-                                      );
-                                      AuthyoResult otpResult =
-                                          await authyoService.verifyOtp(
-                                            maskId: currentMaskId.value,
-                                            otp: otpController.text,
-                                          );
+    return Scaffold(
+      appBar: AppBar(title: const Text('Authyo Plugin')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          _styleCard(),
+          const SizedBox(height: 16),
+          if (currentMaskId != null && !useBuiltInDialog)
+            _customOtpCard()
+          else
+            _sendCard(),
+        ],
+      ),
+    );
+  }
 
-                                      if (showVerificationDialogFlag == false) {
-                                        if (otpResult.error != null) {
-                                          isLoading.value = false;
-                                          messenger.showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                'Oops! ${otpResult.error?.message}',
-                                              ),
-                                            ),
-                                          );
-                                        } else {
-                                          isLoading.value = false;
-                                          messenger.showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                otpResult.result?.message ?? '',
-                                              ),
-                                            ),
-                                          );
-
-                                          phoneNumberController.text = '';
-                                          otpController.text = '';
-                                          currentMaskId.value = '';
-                                        }
-                                      }
-                                    },
-                                    child: Text('Verify OTP'),
-                                  ),
-                                ],
-                              )
-                            : ValueListenableBuilder(
-                                valueListenable: senderSwitch,
-                                builder: (context, sender, child) {
-                                  return Column(
-                                    spacing: 12,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      TextFormField(
-                                        controller: phoneNumberController,
-                                        keyboardType:
-                                            senderSwitch.value ==
-                                                AuthwayEnum.sms
-                                            ? TextInputType.phone
-                                            : TextInputType.emailAddress,
-                                        inputFormatters:
-                                            senderSwitch.value ==
-                                                AuthwayEnum.sms
-                                            ? [
-                                                FilteringTextInputFormatter.allow(
-                                                  (RegExp(r'[0-9+]')),
-                                                ),
-                                              ]
-                                            : [],
-                                        decoration: InputDecoration(
-                                          label: Text(
-                                            sender == AuthwayEnum.sms
-                                                ? 'Phone Number'
-                                                : "Email Address",
-                                          ),
-                                          focusColor: Colors.transparent,
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Theme.of(
-                                                context,
-                                              ).primaryColor,
-                                              width: 1.25,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              24,
-                                            ),
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Theme.of(
-                                                context,
-                                              ).primaryColor,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              24,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Theme.of(
-                                                context,
-                                              ).primaryColor,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              24,
-                                            ),
-                                          ),
-                                          hintText: sender == AuthwayEnum.sms
-                                              ? "+91-123-456-7890"
-                                              : "jon@gmail.com",
-                                          hintStyle: TextStyle(
-                                            color: Colors.grey.shade400,
-                                          ),
-                                          labelStyle: TextStyle(
-                                            color: Colors.grey.shade600,
-                                          ),
-                                        ),
-                                      ),
-                                      Row(
-                                        spacing: 12,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Text('Use Email'),
-                                          Switch(
-                                            value:
-                                                senderSwitch.value ==
-                                                AuthwayEnum.email,
-                                            onChanged: (value) async {
-                                              phoneNumberController.text = '';
-                                              FocusScope.of(context).unfocus();
-
-                                              if (value == true) {
-                                                senderSwitch.value =
-                                                    AuthwayEnum.email;
-                                              } else {
-                                                senderSwitch.value =
-                                                    AuthwayEnum.sms;
-                                              }
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                      TextButton(
-                                        onPressed: () async {
-                                          final messenger =
-                                              ScaffoldMessenger.of(context);
-
-                                          FocusScope.of(context).unfocus();
-                                          AuthyoResult?
-                                          otpResult = await authyoService.sendOtp(
-                                            ctx: context,
-                                            to: phoneNumberController.text,
-                                            authWay: senderSwitch.value,
-                                            onVerificationComplete:
-                                                (authyoResult) {
-                                                  // Check for result.
-                                                  if (authyoResult
-                                                          .result
-                                                          ?.error ==
-                                                      null) {
-                                                    // Verification successful.
-                                                  }
-                                                },
-                                          );
-
-                                          if (otpResult.error != null) {
-                                            isLoading.value = false;
-                                            messenger.showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Oops! ${otpResult.error?.message}',
-                                                ),
-                                              ),
-                                            );
-                                          } else {
-                                            isLoading.value = false;
-                                            if (otpResult
-                                                    .result
-                                                    ?.data
-                                                    ?.results !=
-                                                null) {
-                                              if (otpResult
-                                                  .result!
-                                                  .data!
-                                                  .results!
-                                                  .isEmpty) {
-                                                messenger.showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      'Error: ${otpResult.result?.message}',
-                                                    ),
-                                                  ),
-                                                );
-                                                return;
-                                              }
-                                              final maskResult = otpResult
-                                                  .result
-                                                  ?.data
-                                                  ?.results
-                                                  ?.firstWhere(
-                                                    (element) =>
-                                                        element.maskId != null,
-                                                    orElse: () {
-                                                      return otpResult
-                                                          .result!
-                                                          .data!
-                                                          .results![0];
-                                                    },
-                                                  );
-                                              if (maskResult == null ||
-                                                  maskResult.maskId == null) {
-                                                messenger.showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      'Unable to find maskId: ${maskResult!.message}',
-                                                    ),
-                                                  ),
-                                                );
-                                              } else {
-                                                String? maskId = otpResult
-                                                    .result
-                                                    ?.data
-                                                    ?.results
-                                                    ?.firstWhere(
-                                                      (element) =>
-                                                          element.maskId !=
-                                                          null,
-                                                    )
-                                                    .maskId;
-                                                messenger.showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      'OTP Sent Successfully',
-                                                    ),
-                                                  ),
-                                                );
-                                                currentMaskId.value =
-                                                    maskId ?? '';
-                                              }
-                                            } else {
-                                              messenger.showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'Unable to find maskId: ${otpResult.result?.data?.results?.first.message}',
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          }
-                                        },
-                                        child: const Text('Send OTP'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                      ],
-                    );
-                  },
-                ),
+  Widget _styleCard() {
+    final cfg = remoteConfig;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Dialog design',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<AuthyoDesignStyle?>(
+              value: selectedStyle,
+              decoration: const InputDecoration(
+                labelText: 'Design style',
+                border: OutlineInputBorder(),
               ),
-            );
-          },
+              items: [
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(
+                    'Follow dashboard'
+                    '${cfg?.designStyle != null ? ' (${cfg!.designStyle!.label})' : ''}',
+                  ),
+                ),
+                for (final s in AuthyoDesignStyle.values)
+                  DropdownMenuItem(value: s, child: Text(s.label)),
+              ],
+              onChanged: (v) => setState(() => selectedStyle = v),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Use built-in verification dialog'),
+              value: useBuiltInDialog,
+              onChanged: (v) {
+                setState(() {
+                  useBuiltInDialog = v;
+                  currentMaskId = null;
+                });
+                authyoService.setShowVerificationDialog(v);
+              },
+            ),
+            if (cfg != null)
+              Text(
+                'Dashboard: ${cfg.authMethods.isEmpty ? 'no channels' : cfg.authMethods.join(', ')}'
+                ' · ${cfg.socialLogins.length} social login(s)',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sendCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: targetController,
+              keyboardType: useEmail
+                  ? TextInputType.emailAddress
+                  : TextInputType.phone,
+              inputFormatters: useEmail
+                  ? const []
+                  : [FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))],
+              decoration: InputDecoration(
+                labelText: useEmail ? 'Email address' : 'Phone number',
+                hintText: useEmail ? 'jon@example.com' : '+911234567890',
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Use email'),
+              value: useEmail,
+              onChanged: (v) {
+                targetController.clear();
+                setState(() => useEmail = v);
+              },
+            ),
+            FilledButton(
+              onPressed: sending ? null : _sendOtp,
+              child: sending
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Send OTP'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _customOtpCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Custom UI – enter the OTP you received',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: otpController,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                labelText: 'OTP',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: _verifyOtp,
+              child: const Text('Verify OTP'),
+            ),
+            TextButton(
+              onPressed: () => setState(() => currentMaskId = null),
+              child: const Text('Cancel'),
+            ),
+          ],
         ),
       ),
     );
