@@ -91,10 +91,21 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
       resendTimerSeconds: _t.resendTimerConfigured,
       config: widget.config,
       otpLength: widget.otpLength,
+      rememberMeEnabled: _t.rememberMeEnabled,
       service: widget.service,
     );
     _c.addListener(_onControllerChanged);
     _c.start();
+    // Pre-tick "Remember me" when this identity was remembered last time
+    // (the web widget does the same when it prefills the form).
+    if (_t.rememberMeEnabled) {
+      (widget.service ?? AuthyoService.instance).rememberedIdentity().then((
+        remembered,
+      ) {
+        if (!mounted || remembered == null || remembered != widget.to) return;
+        setState(() => _c.rememberMe = true);
+      });
+    }
   }
 
   void _onControllerChanged() {
@@ -260,6 +271,17 @@ class _PhoneVerificationDialogState extends State<PhoneVerificationDialog> {
                 alignment: _wrapAlignmentFor(layout),
                 onCompleted: _verify,
               ),
+              if (_t.rememberMeEnabled) ...[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: _alignmentFor(layout),
+                  child: _style.checkbox(
+                    label: 'Remember me',
+                    value: _c.rememberMe,
+                    onChanged: (v) => setState(() => _c.rememberMe = v),
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               _timerSection(layout),
             ],

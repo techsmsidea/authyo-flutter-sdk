@@ -183,6 +183,58 @@ https://app.authyo.io/account/welcome?ref=HARSCE2BE4&utm_source=partner&utm_medi
   /// The configuration currently in memory, if any.
   AuthyoWidgetConfig? get currentConfig => _configService?.current;
 
+  // ---------------------------------------------------------------------------
+  // Remember me
+  // ---------------------------------------------------------------------------
+
+  String get _rememberKey =>
+      'authyo_remember_${_configService?.clientId ?? ''}';
+
+  /// Whether the dashboard enabled "Remember me" for this application
+  /// (from the loaded configuration; false until it is loaded).
+  bool get rememberMeEnabled => effectiveTheme.resolve().rememberMeEnabled;
+
+  /// The email / phone the user asked to be remembered on this device, so
+  /// your sign-in form can prefill it. Null when nothing was remembered or
+  /// the dashboard option is off (a value stored while it was on is
+  /// removed as soon as the option is turned off).
+  Future<String?> rememberedIdentity() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (currentConfig != null && !rememberMeEnabled) {
+        // Option turned off on the dashboard: drop what an earlier
+        // configuration stored.
+        await prefs.remove(_rememberKey);
+        return null;
+      }
+      final v = prefs.getString(_rememberKey);
+      return v == null || v.isEmpty ? null : v;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Stores [identity] for [rememberedIdentity]. The dialog calls this only
+  /// when the option is on and the user ticked the box.
+  Future<void> rememberIdentity(String identity) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (identity.trim().isEmpty) {
+        await prefs.remove(_rememberKey);
+      } else {
+        await prefs.setString(_rememberKey, identity.trim());
+      }
+    } catch (_) {}
+  }
+
+  /// Forgets the remembered identity (e.g. on sign-out).
+  Future<void> forgetIdentity() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_rememberKey);
+    } catch (_) {}
+  }
+
   /// Forgets the cached remote configuration.
   Future<void> clearConfigCache() async => _configService?.clear();
 
@@ -399,12 +451,22 @@ https://app.authyo.io/account/welcome?ref=HARSCE2BE4&utm_source=partner&utm_medi
   /// [maskId] param requires a valid maskId received from [sendOtp] response, in case of success.
   /// [otp] param requires the OTP you have received via your desired [authWay]
   /// Returns an [AuthyoResult] containing either the an [AuthyoResponseModel] or an [ApiError].
+  ///
+  /// [rememberMe] mirrors the dialog's "Remember me" checkbox: the server
+  /// only honours it when the application enabled the option, in which case
+  /// the returned session token lasts `rememberMeDays` instead of the
+  /// normal session duration.
   Future<AuthyoResult> verifyOtp({
     required String maskId,
     required String otp,
+    bool rememberMe = false,
   }) async {
     final api = _api;
-    VerifyOTPParams verifyOTPParams = VerifyOTPParams(maskId: maskId, otp: otp);
+    VerifyOTPParams verifyOTPParams = VerifyOTPParams(
+      maskId: maskId,
+      otp: otp,
+      rememberMe: rememberMe,
+    );
     AuthyoResponseModel response = await api.get(
       AuthyoEndpoints.verifyOtpEndpoint,
       queryParameters: verifyOTPParams.toJson(),

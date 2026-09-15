@@ -124,6 +124,8 @@ class AuthyoTheme {
     this.inputShape,
     this.inputUnderline,
     this.otpHidden,
+    this.rememberMe,
+    this.rememberMeDays,
   });
 
   final Color? primary;
@@ -170,6 +172,13 @@ class AuthyoTheme {
 
   /// Dashboard "Hide OTP": typed digits are masked like a password.
   final bool? otpHidden;
+
+  /// Dashboard "Remember me": show the checkbox in the dialog. Off = no
+  /// checkbox, nothing sent, nothing stored.
+  final bool? rememberMe;
+
+  /// Days a remembered session stays valid (server side), 1..365.
+  final int? rememberMeDays;
 
   /// Dashboard "Input Style" = borderless: inputs draw only a bottom line.
   final bool? inputUnderline;
@@ -347,6 +356,10 @@ class AuthyoTheme {
           ? (json['inputStyle'] as num) == 4
           : null,
       otpHidden: flag('isOtpHide'),
+      rememberMe: flag('isRememberMe'),
+      rememberMeDays: json['rememberMeDays'] is num
+          ? (json['rememberMeDays'] as num).toInt()
+          : null,
     );
   }
 
@@ -389,6 +402,8 @@ class AuthyoTheme {
       inputShape: other.inputShape ?? inputShape,
       inputUnderline: other.inputUnderline ?? inputUnderline,
       otpHidden: other.otpHidden ?? otpHidden,
+      rememberMe: other.rememberMe ?? rememberMe,
+      rememberMeDays: other.rememberMeDays ?? rememberMeDays,
     );
   }
 
@@ -469,6 +484,8 @@ class AuthyoResolvedTheme {
 
   bool get inputUnderline => _t.inputUnderline ?? false;
   bool get otpHidden => _t.otpHidden ?? false;
+  bool get rememberMeEnabled => _t.rememberMe ?? false;
+  int get rememberMeDays => (_t.rememberMeDays ?? 30).clamp(1, 365);
 
   /// Dashboard resend timer as configured (0 = not set). Sent to the server
   /// as the new expiry on resend, exactly like the web widget.

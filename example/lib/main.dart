@@ -69,8 +69,18 @@ class _DemoPageState extends State<DemoPage> {
       // designStyle: AuthyoDesignStyle.glassmorphism,
       // theme: const AuthyoTheme(primary: Colors.teal),
     );
-    authyoService.loadConfig().then((cfg) {
-      if (mounted) setState(() => remoteConfig = cfg);
+    authyoService.loadConfig().then((cfg) async {
+      if (!mounted) return;
+      setState(() => remoteConfig = cfg);
+      // "Remember me" (dashboard option): prefill what the user asked us to
+      // remember last time. Null when the option is off or nothing was kept.
+      final remembered = await authyoService.rememberedIdentity();
+      if (mounted && remembered != null && targetController.text.isEmpty) {
+        setState(() {
+          targetController.text = remembered;
+          useEmail = remembered.contains('@');
+        });
+      }
     });
   }
 

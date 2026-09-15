@@ -210,6 +210,7 @@ The dialog behaves exactly like the Authyo web widget (`auth-sdk.js`) on the sam
 | Success | green ring + check + "Verified successfully" inside the card | same, then the dialog closes and `onVerificationComplete` fires |
 | Footer | Terms & Privacy Policy links, "Powered by Authyo" | same (`hideBranding` hides the second line) |
 | Hide OTP | digits masked | same (`isOtpHide`) |
+| Remember me | checkbox shown only when enabled on the dashboard; ticked → longer session token + identity prefilled next visit | same: checkbox in the dialog, `rememberMe` sent on verify, identity kept on device — read it with `authyoService.rememberedIdentity()` to prefill your form, clear with `forgetIdentity()`. Off → no checkbox, nothing sent, nothing stored |
 
 ### One-time platform setup (required for social login)
 

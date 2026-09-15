@@ -307,6 +307,44 @@ abstract class AuthyoStyle {
     );
   }
 
+  /// "Remember me" checkbox (only rendered when the dashboard enabled it).
+  Widget checkbox({
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: Checkbox(
+              value: value,
+              onChanged: (v) => onChanged(v ?? false),
+              activeColor: theme.primary,
+              side: BorderSide(color: theme.inputBorder),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: fontFamily,
+              fontSize: 14,
+              color: theme.bodyTextColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Countdown / expiry line under the OTP boxes. [error] switches to the
   /// red "OTP expired…" look.
   Widget statusText(String text, {bool error = false, TextAlign? align}) {

@@ -14,6 +14,7 @@ class VerificationController extends ChangeNotifier {
     required this.resendTimerSeconds,
     required this.config,
     this.otpLength,
+    this.rememberMeEnabled = false,
     AuthyoService? service,
   }) : _service = service ?? AuthyoService.instance {
     _adoptSendResult(sendResult);
@@ -38,6 +39,14 @@ class VerificationController extends ChangeNotifier {
   String? maskId;
   String otp = '';
   bool isLoading = false;
+
+  /// Dashboard "Remember me" option (from the resolved theme). When false
+  /// the checkbox is never shown, the flag is never sent and nothing is
+  /// stored on the device.
+  final bool rememberMeEnabled;
+
+  /// "Remember me" checkbox state.
+  bool rememberMe = false;
 
   /// True once the OTP has expired: the resend options replace the timer.
   bool canResend = false;
@@ -144,7 +153,12 @@ class VerificationController extends ChangeNotifier {
       return AuthyoResult.failure(BadRequestError(errorMessage!));
     }
     _setLoading(true);
-    final res = await _service.verifyOtp(maskId: maskId ?? '', otp: otp.trim());
+    final remember = rememberMeEnabled && rememberMe;
+    final res = await _service.verifyOtp(
+      maskId: maskId ?? '',
+      otp: otp.trim(),
+      rememberMe: remember,
+    );
     if (_disposed) return res;
     if (res.error != null) {
       errorMessage = res.error!.message;
@@ -152,6 +166,13 @@ class VerificationController extends ChangeNotifier {
       _timer?.cancel();
       verified = true;
       completed = res;
+      // Like the web widget: remember the identity only when the option is
+      // on and the box is ticked; otherwise make sure nothing is kept.
+      if (remember) {
+        unawaited(_service.rememberIdentity(to));
+      } else {
+        unawaited(_service.forgetIdentity());
+      }
     }
     _setLoading(false);
     return res;

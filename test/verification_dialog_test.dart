@@ -3,6 +3,7 @@ import 'package:authyo_plugin/design/authyo_style_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Send result as the API returns it. [expirySeconds] mirrors the
 /// `createdTime` / `expireTime` pair the web widget counts down from.
@@ -32,13 +33,16 @@ Widget _host(Widget dialog) => MaterialApp(
 class _FakeService extends AuthyoService {
   _FakeService() : super.forTesting();
   String? verifiedOtp;
+  bool? verifiedRememberMe;
 
   @override
   Future<AuthyoResult> verifyOtp({
     required String maskId,
     required String otp,
+    bool rememberMe = false,
   }) async {
     verifiedOtp = otp;
+    verifiedRememberMe = rememberMe;
     return AuthyoResult.success(
       AuthyoResponseModel(success: true, message: 'verified successfully'),
     );
@@ -292,6 +296,93 @@ void main() {
       expect(reported?.result?.message, 'verified successfully');
     },
   );
+
+  group('remember me', () {
+    const key = 'authyo_remember_';
+    Widget host(
+      _FakeService service, {
+      required bool enabled,
+      bool pre = false,
+    }) {
+      return MaterialApp(
+        home: Scaffold(
+          body: PhoneVerificationDialog(
+            authyoRes: _sentResult(expirySeconds: 120),
+            to: '+911234567890',
+            otpLength: 4,
+            service: service,
+            verifiedDisplayDuration: const Duration(minutes: 1),
+            style: AuthyoStyleFactory.create(
+              AuthyoDesignStyle.flat,
+              AuthyoTheme(rememberMe: enabled),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets(
+      'off: no checkbox, flag false, nothing stored, stale value dropped',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({key: 'stale@example.com'});
+        final service = _FakeService();
+        await tester.pumpWidget(host(service, enabled: false));
+        await tester.pump();
+        expect(find.text('Remember me'), findsNothing);
+        await tester.enterText(_otpBoxes().first, '1234');
+        await tester.pump();
+        await tester.pump();
+        expect(service.verifiedRememberMe, isFalse);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString(key), isNull);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets('on but unticked: flag false and nothing stored', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final service = _FakeService();
+      await tester.pumpWidget(host(service, enabled: true));
+      await tester.pump();
+      expect(find.text('Remember me'), findsOneWidget);
+      await tester.enterText(_otpBoxes().first, '1234');
+      await tester.pump();
+      await tester.pump();
+      expect(service.verifiedRememberMe, isFalse);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(key), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets(
+      'on and ticked: flag true, identity stored, pre-ticked next time',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final service = _FakeService();
+        await tester.pumpWidget(host(service, enabled: true));
+        await tester.pump();
+        await tester.tap(find.text('Remember me'));
+        await tester.pump();
+        expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isTrue);
+        await tester.enterText(_otpBoxes().first, '1234');
+        await tester.pump();
+        await tester.pump();
+        expect(service.verifiedRememberMe, isTrue);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString(key), '+911234567890');
+        await tester.pumpWidget(const SizedBox());
+
+        // Next dialog for the same identity starts ticked.
+        await tester.pumpWidget(host(_FakeService(), enabled: true));
+        await tester.pump();
+        await tester.pump();
+        expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isTrue);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  });
 
   testWidgets('hideBranding removes footer and header shows when enabled', (
     tester,

@@ -10,6 +10,7 @@
 - The dialog follows the web widget's OTP flow step for step: top-left back button, "OTP sent to: … Change", one box per digit with auto-advance / paste / auto-verify on the last digit (no Verify button), `OTP will expire in m:ss` from the server's `expireTime`, red expiry notice with **Resend** / **Sms · Whatsapp · VoiceCall** buttons for the channels enabled on the dashboard, resend passes the dashboard timer as the new expiry, social logins as an icon row under `OR`, an in-card "Verified successfully" badge before closing, Terms & Privacy footer, and `isOtpHide`.
 - `AuthyoStyle` gained `decorateInput`, `otpBox`, `backButton`, `sentToRow`, `statusText`, `verifiedBadge` (styles decorate the digit boxes the same way as the single field); `AuthyoVerifiedBadge` widget.
 - `PhoneVerificationDialog` gained `verifiedDisplayDuration` and a test-only `service` seam (`AuthyoService.forTesting`).
+- "Remember me" (dashboard option): the dialog shows the checkbox only when enabled; ticking it sends `rememberMe` on verify (longer session token) and keeps the identity on device — `AuthyoService.rememberedIdentity()` / `forgetIdentity()`; `verifyOtp(rememberMe:)`. When the option is off nothing is shown, sent or stored.
 - `User` model gains `email`, `identity`, `displayName`, `channel`.
 
 ### Changed
