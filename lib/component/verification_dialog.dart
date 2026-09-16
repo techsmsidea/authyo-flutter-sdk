@@ -587,6 +587,9 @@ class _ProviderGlyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = login.iconUrl;
+    if (login.provider == AuthyoSocialProvider.apple) {
+      return const Icon(Icons.apple, color: Colors.black, size: 22);
+    }
     if (url != null && url.startsWith('http')) {
       return Image.network(
         url,
@@ -603,6 +606,7 @@ class _ProviderGlyph extends StatelessWidget {
       AuthyoSocialProvider.microsoft => ('M', const Color(0xFF00A4EF)),
       AuthyoSocialProvider.github => ('GH', const Color(0xFF24292F)),
       AuthyoSocialProvider.linkedin => ('in', const Color(0xFF0A66C2)),
+      AuthyoSocialProvider.apple => ('', Colors.black),
       AuthyoSocialProvider.unknown => ('?', Colors.grey),
     };
     return DecoratedBox(

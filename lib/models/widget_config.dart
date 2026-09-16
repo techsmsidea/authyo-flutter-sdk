@@ -8,6 +8,7 @@ enum AuthyoSocialProvider {
   microsoft('Microsoft'),
   github('Github'),
   linkedin('LinkedIn'),
+  apple('Apple'),
   unknown('Unknown');
 
   /// Provider name as the backend spells it (`Common.SocialMedia` enum).
@@ -32,6 +33,8 @@ enum AuthyoSocialProvider {
         return 'GitHub';
       case linkedin:
         return 'LinkedIn';
+      case apple:
+        return 'Apple';
       case unknown:
         return 'Sign in';
     }

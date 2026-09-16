@@ -54,6 +54,7 @@ const _fourSocials = [
   AuthyoSocialLogin(provider: AuthyoSocialProvider.microsoft, id: '2'),
   AuthyoSocialLogin(provider: AuthyoSocialProvider.github, id: '3'),
   AuthyoSocialLogin(provider: AuthyoSocialProvider.linkedin, id: '4'),
+  AuthyoSocialLogin(provider: AuthyoSocialProvider.apple, id: '6'),
 ];
 
 Finder _otpBoxes() => find.byWidgetPredicate(

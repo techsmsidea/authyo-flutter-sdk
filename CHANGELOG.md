@@ -1,3 +1,8 @@
+## [1.1.1] - 2026-09-16
+
+### Added
+- Sign in with Apple appears in the dialog when configured on the dashboard (`AuthyoSocialProvider.apple`); the backend's Apple callback now returns to the app via `authyo://oauth/callback` like the other providers.
+
 ## [1.1.0] - 2026-09-12
 
 ### Added
