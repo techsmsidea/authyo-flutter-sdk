@@ -3,6 +3,10 @@
 ### Added
 - Sign in with Apple appears in the dialog when configured on the dashboard (`AuthyoSocialProvider.apple`); the backend's Apple callback now returns to the app via `authyo://oauth/callback` like the other providers.
 
+### Fixed
+- Neumorphism: the input's pressed-in edges are drawn over the configured input colour (the field's own fill used to cover them), with the web widget's fixed 9px edges.
+- Gradients that faded to `Colors.transparent` rendered a grey band on Impeller (Android/iOS); they now fade to the same colour at alpha 0 (Neumorphism inset, Claymorphism highlight, Skeuomorphism gloss/well).
+
 ## [1.1.0] - 2026-09-12
 
 ### Added

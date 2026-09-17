@@ -58,7 +58,7 @@ class ClayStyle extends AuthyoStyle {
       colors: [
         Colors.white.withValues(alpha: strength),
         Colors.white.withValues(alpha: strength * 0.35),
-        Colors.transparent,
+        Colors.white.withValues(alpha: 0),
       ],
     ),
   );

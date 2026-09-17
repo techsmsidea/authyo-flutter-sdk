@@ -83,7 +83,9 @@ class NeumorphicStyle extends AuthyoStyle {
     return super
         .otpInputDecoration(hint: hint, label: label)
         .copyWith(
-          fillColor: theme.inputBackground,
+          // The inset paints the input colour itself so its pressed-in edges
+          // stay visible (the field's own fill would cover them).
+          filled: false,
           border: none(),
           enabledBorder: none(),
           focusedBorder: OutlineInputBorder(
@@ -99,7 +101,7 @@ class NeumorphicStyle extends AuthyoStyle {
   @override
   Widget decorateInput(Widget field) {
     return _NeuInset(
-      base: _base,
+      base: theme.inputBackground,
       light: _light,
       dark: _dark,
       radius: inputRadius,
@@ -248,17 +250,34 @@ class _NeuInset extends StatelessWidget {
   final Widget child;
 
   /// Mirror of the raised look: dark along the top + left edges, light along
-  /// the bottom + right edges, each as a short edge gradient clipped by the
-  /// pill shape (matches the web widget's construction).
-  Widget _edge(Alignment begin, Alignment end, Color c) => Positioned.fill(
+  /// the bottom + right edges, each a fixed 9px edge gradient — the web
+  /// widget's `linear-gradient(..., transparent 9px)` — clipped by the shape.
+  static const double _edgeSize = 9;
+
+  Widget _edge({
+    double? top,
+    double? bottom,
+    double? left,
+    double? right,
+    required Alignment begin,
+    required Alignment end,
+    required Color c,
+  }) => Positioned(
+    top: top,
+    bottom: bottom,
+    left: left,
+    right: right,
+    width: (left != null && right != null) ? null : _edgeSize,
+    height: (top != null && bottom != null) ? null : _edgeSize,
     child: IgnorePointer(
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: begin,
             end: end,
-            stops: const [0, 0.22],
-            colors: [c, Colors.transparent],
+            // Fade to the same hue at alpha 0 (not transparent black):
+            // Impeller would otherwise darken the fade mid-way.
+            colors: [c, c.withValues(alpha: 0)],
           ),
         ),
       ),
@@ -267,30 +286,45 @@ class _NeuInset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Same alphas as the web widget's pressed() gradients.
+    final dk = dark.withValues(alpha: 0.55);
+    final lt = light.withValues(alpha: 0.75);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: Stack(
         children: [
           Positioned.fill(child: ColoredBox(color: base)),
           _edge(
-            Alignment.topCenter,
-            Alignment.bottomCenter,
-            dark.withValues(alpha: 0.55),
+            top: 0,
+            left: 0,
+            right: 0,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            c: dk,
           ),
           _edge(
-            Alignment.centerLeft,
-            Alignment.centerRight,
-            dark.withValues(alpha: 0.55),
+            top: 0,
+            bottom: 0,
+            left: 0,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            c: dk,
           ),
           _edge(
-            Alignment.bottomCenter,
-            Alignment.topCenter,
-            light.withValues(alpha: 0.75),
+            bottom: 0,
+            left: 0,
+            right: 0,
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            c: lt,
           ),
           _edge(
-            Alignment.centerRight,
-            Alignment.centerLeft,
-            light.withValues(alpha: 0.75),
+            top: 0,
+            bottom: 0,
+            right: 0,
+            begin: Alignment.centerRight,
+            end: Alignment.centerLeft,
+            c: lt,
           ),
           child,
         ],

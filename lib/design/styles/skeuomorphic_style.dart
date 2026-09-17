@@ -66,8 +66,8 @@ class SkeuomorphicStyle extends AuthyoStyle {
                 stops: const [0, 0.012, 0.985, 1],
                 colors: [
                   Colors.white.withValues(alpha: 0.9),
-                  Colors.transparent,
-                  Colors.transparent,
+                  Colors.white.withValues(alpha: 0),
+                  Colors.black.withValues(alpha: 0),
                   Colors.black.withValues(alpha: 0.28),
                 ],
               ),
@@ -149,7 +149,7 @@ class SkeuomorphicStyle extends AuthyoStyle {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.black.withValues(alpha: 0.18),
-                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0),
                   ],
                 ),
               ),
